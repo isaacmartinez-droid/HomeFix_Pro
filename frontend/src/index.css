@@ -1,0 +1,51 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Courier+Prime&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0');
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #003366;
+  --color-primary-variant: #002244;
+  --color-secondary: #E6F0FA;
+  --color-background: #f9f9fe;
+  --color-surface: #ffffff;
+  --color-surface-variant: #e1e2ec;
+  --color-on-primary: #ffffff;
+  --color-on-secondary: #003366;
+  --color-on-background: #1a1b22;
+  --color-on-surface: #1a1b22;
+  --color-on-surface-variant: #44474f;
+  --color-outline: #74777f;
+  --color-outline-variant: #c4c6d0;
+  --color-surface-container: #f0f0f7;
+  --color-surface-container-high: #ebeaf1;
+  --color-surface-container-highest: #e4e2e9;
+  --color-surface-container-low: #f6f5fc;
+  --color-surface-container-lowest: #ffffff;
+  --color-primary-container: #d8e2ff;
+  --color-on-primary-container: #001a41;
+  --color-secondary-container: #dbe4e9;
+  --color-on-secondary-container: #141c2b;
+  --color-error: #ba1a1a;
+  --color-on-error: #ffffff;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #410002;
+  --color-success: #006d3a;
+  --color-success-container: #95f8b4;
+  --color-warning: #f09800;
+  --color-warning-container: #ffdf9c;
+  --color-info: #0061a4;
+  --color-info-container: #d1e4ff;
+
+  --font-family-sans: 'Inter', sans-serif;
+  --font-family-mono: 'Courier Prime', monospace;
+
+  --shadow-soft: 0 4px 12px rgba(0,51,102,0.08);
+}
+
+@layer base {
+  body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--color-background);
+    color: var(--color-on-background);
+  }
+}
