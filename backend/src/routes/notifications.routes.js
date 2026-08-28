@@ -5,6 +5,20 @@ const auth = require('../middleware/auth');
 const router = express.Router();
 const prisma = new PrismaClient();
 
+/**
+ * @swagger
+ * /api/notifications:
+ *   get:
+ *     summary: Obtiene las últimas 20 notificaciones del usuario
+ *     tags: [Notifications]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Lista de notificaciones
+ *       500:
+ *         description: Error del servidor
+ */
 // GET /api/notifications
 router.get('/', auth, async (req, res) => {
   try {
@@ -19,6 +33,20 @@ router.get('/', auth, async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/notifications/unread-count:
+ *   get:
+ *     summary: Obtiene la cantidad de notificaciones sin leer
+ *     tags: [Notifications]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Conteo de notificaciones
+ *       500:
+ *         description: Error del servidor
+ */
 // GET /api/notifications/unread-count
 router.get('/unread-count', auth, async (req, res) => {
   try {
@@ -31,6 +59,26 @@ router.get('/unread-count', auth, async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/notifications/{id}/read:
+ *   put:
+ *     summary: Marca una notificación como leída
+ *     tags: [Notifications]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Notificación marcada como leída
+ *       500:
+ *         description: Error al marcar notificación
+ */
 // PUT /api/notifications/:id/read
 router.put('/:id/read', auth, async (req, res) => {
   try {

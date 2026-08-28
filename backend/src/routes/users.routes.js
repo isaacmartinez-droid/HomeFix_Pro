@@ -6,6 +6,29 @@ const roleGuard = require('../middleware/roleGuard');
 const router = express.Router();
 const prisma = new PrismaClient();
 
+/**
+ * @swagger
+ * /api/users:
+ *   get:
+ *     summary: Obtiene la lista de usuarios (Solo Admin)
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: role
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Lista de usuarios obtenida exitosamente
+ *       403:
+ *         description: No autorizado
+ */
 // GET /api/users (Admin)
 router.get('/', auth, roleGuard('ADMIN'), async (req, res) => {
   try {
@@ -27,6 +50,26 @@ router.get('/', auth, roleGuard('ADMIN'), async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/users/{id}:
+ *   get:
+ *     summary: Obtiene los detalles de un usuario específico (Solo Admin)
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Detalles del usuario
+ *       404:
+ *         description: Usuario no encontrado
+ */
 // GET /api/users/:id (Admin)
 router.get('/:id', auth, roleGuard('ADMIN'), async (req, res) => {
   try {
@@ -42,6 +85,26 @@ router.get('/:id', auth, roleGuard('ADMIN'), async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/users/{id}/toggle:
+ *   put:
+ *     summary: Activa o desactiva la cuenta de un usuario (Solo Admin)
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Estado de la cuenta actualizado
+ *       404:
+ *         description: Usuario no encontrado
+ */
 // PUT /api/users/:id/toggle (Admin)
 router.put('/:id/toggle', auth, roleGuard('ADMIN'), async (req, res) => {
   try {

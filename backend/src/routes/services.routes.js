@@ -6,6 +6,18 @@ const roleGuard = require('../middleware/roleGuard');
 const router = express.Router();
 const prisma = new PrismaClient();
 
+/**
+ * @swagger
+ * /api/services/categories:
+ *   get:
+ *     summary: Obtiene la lista de categorías de servicios
+ *     tags: [Services]
+ *     responses:
+ *       200:
+ *         description: Lista de categorías devuelta exitosamente
+ *       500:
+ *         description: Error al obtener categorías
+ */
 // GET /api/services/categories
 router.get('/categories', async (req, res) => {
   try {
@@ -16,6 +28,36 @@ router.get('/categories', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/services/categories:
+ *   post:
+ *     summary: Crea una nueva categoría de servicio (Solo Admin)
+ *     tags: [Services]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - icon
+ *             properties:
+ *               name:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               icon:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Categoría creada
+ *       403:
+ *         description: Acceso denegado
+ */
 // POST /api/services/categories (Admin)
 router.post('/categories', auth, roleGuard('ADMIN'), async (req, res) => {
   try {
@@ -27,6 +69,39 @@ router.post('/categories', auth, roleGuard('ADMIN'), async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/services/categories/{id}:
+ *   put:
+ *     summary: Actualiza una categoría de servicio existente (Solo Admin)
+ *     tags: [Services]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               icon:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Categoría actualizada
+ *       403:
+ *         description: Acceso denegado
+ */
 // PUT /api/services/categories/:id (Admin)
 router.put('/categories/:id', auth, roleGuard('ADMIN'), async (req, res) => {
   try {
