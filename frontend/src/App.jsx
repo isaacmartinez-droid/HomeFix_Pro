@@ -17,17 +17,22 @@ const SearchProvidersPage = lazy(() => import('./pages/client/SearchProvidersPag
 const TechDashboard = lazy(() => import('./pages/technician/TechDashboard'));
 const AvailableJobsPage = lazy(() => import('./pages/technician/AvailableJobsPage'));
 const MyAssignedJobsPage = lazy(() => import('./pages/technician/MyAssignedJobsPage'));
+const TechReviewsPage = lazy(() => import('./pages/technician/TechReviewsPage'));
+
+// Layout
+const DashboardLayout = lazy(() => import('./components/layout/DashboardLayout'));
 
 // Admin Pages
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
+const AdminUsersPage = lazy(() => import('./pages/admin/AdminUsersPage'));
 
 const Loading = () => (
-  <div className="min-h-screen flex items-center justify-center bg-background">
+  <div className="min-h-screen flex items-center justify-center bg-[#f8fafc]">
     <div className="text-center">
-      <span className="material-symbols-outlined text-5xl text-primary" style={{ animation: 'spin 1s linear infinite' }}>
+      <span className="material-symbols-outlined text-5xl text-blue-600" style={{ animation: 'spin 1s linear infinite' }}>
         progress_activity
       </span>
-      <p className="mt-4 font-body-md text-body-md text-on-surface-variant">Cargando...</p>
+      <p className="mt-4 font-body-md text-slate-500">Cargando...</p>
     </div>
   </div>
 );
@@ -68,26 +73,24 @@ function App() {
             {/* Technician Routes */}
             <Route path="/dashboard/tecnico" element={
               <ProtectedRoute allowedRoles={['TECNICO']}>
-                <TechDashboard />
+                <DashboardLayout />
               </ProtectedRoute>
-            } />
-            <Route path="/tecnico/trabajos-disponibles" element={
-              <ProtectedRoute allowedRoles={['TECNICO']}>
-                <AvailableJobsPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/tecnico/mis-trabajos" element={
-              <ProtectedRoute allowedRoles={['TECNICO']}>
-                <MyAssignedJobsPage />
-              </ProtectedRoute>
-            } />
+            }>
+              <Route index element={<TechDashboard />} />
+              <Route path="disponibles" element={<AvailableJobsPage />} />
+              <Route path="asignados" element={<MyAssignedJobsPage />} />
+              <Route path="resenas" element={<TechReviewsPage />} />
+            </Route>
 
             {/* Admin Routes */}
             <Route path="/dashboard/admin" element={
               <ProtectedRoute allowedRoles={['ADMIN']}>
-                <AdminDashboard />
+                <DashboardLayout />
               </ProtectedRoute>
-            } />
+            }>
+              <Route index element={<AdminDashboard />} />
+              <Route path="usuarios" element={<AdminUsersPage />} />
+            </Route>
 
             {/* Catch-all */}
             <Route path="*" element={<Navigate to="/login" replace />} />

@@ -2,14 +2,30 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./swagger');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
 // --- Middleware ---
 app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
+app.use(helmet({ crossOriginResourcePolicy: false })); // Permite servir imágenes locales
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// --- Rate Limiting ---
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 100, // Límite de 100 peticiones por IP por ventana
+  message: 'Demasiadas peticiones desde esta IP, por favor intenta de nuevo más tarde.'
+});
+app.use('/api', limiter);
+
+// --- Swagger API Docs ---
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Serve uploaded KYC files statically
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
@@ -44,5 +60,6 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`\n🔧 HomeFix Pro API`);
   console.log(`✅ Servidor corriendo en http://localhost:${PORT}`);
+  console.log(`📚 Documentación Swagger: http://localhost:${PORT}/api-docs`);
   console.log(`📋 Health check: http://localhost:${PORT}/api/health\n`);
 });

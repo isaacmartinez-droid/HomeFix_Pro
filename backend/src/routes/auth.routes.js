@@ -7,6 +7,47 @@ const auth = require('../middleware/auth');
 const router = express.Router();
 const prisma = new PrismaClient();
 
+/**
+ * @swagger
+ * /api/auth/register:
+ *   post:
+ *     summary: Registra un nuevo usuario
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *               - fullName
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: usuario@ejemplo.com
+ *               password:
+ *                 type: string
+ *                 example: secreta123
+ *               fullName:
+ *                 type: string
+ *                 example: Juan Pérez
+ *               phone:
+ *                 type: string
+ *               role:
+ *                 type: string
+ *                 enum: [CLIENTE, TECNICO, EMPRESA]
+ *               address:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Usuario registrado exitosamente
+ *       400:
+ *         description: Faltan campos requeridos
+ *       409:
+ *         description: El correo ya está registrado
+ */
 // POST /api/auth/register
 router.post('/register', async (req, res) => {
   try {
@@ -47,6 +88,38 @@ router.post('/register', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/auth/login:
+ *   post:
+ *     summary: Inicia sesión
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: usuario@ejemplo.com
+ *               password:
+ *                 type: string
+ *                 example: secreta123
+ *     responses:
+ *       200:
+ *         description: Inicio de sesión exitoso, retorna el token JWT
+ *       400:
+ *         description: Email y contraseña requeridos
+ *       401:
+ *         description: Credenciales incorrectas
+ *       403:
+ *         description: Cuenta desactivada
+ */
 // POST /api/auth/login
 router.post('/login', async (req, res) => {
   try {
