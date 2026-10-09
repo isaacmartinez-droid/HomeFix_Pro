@@ -1,6 +1,11 @@
 # Dependencias
 node_modules/
 
+# Archivos de configuración raíz no utilizados por la aplicación
+/astro.config.mjs
+/package.json
+/package-lock.json
+
 # Entornos
 .env
 .env.local
