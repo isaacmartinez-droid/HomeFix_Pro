@@ -1,91 +1,82 @@
-const BASE_URL = 'http://localhost:3001/api';
-
+const BASE_URL = (import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '');
 const getToken = () => localStorage.getItem('hfp_token');
-
-const request = async (endpoint, options = {}) => {
+export const request = async (endpoint, options = {}) => {
   const token = getToken();
   const headers = {
-    'Content-Type': 'application/json',
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(options.body instanceof FormData ? {} : { 'Content-Type': 'application/json' }),
+    ...(token ? { Authorization: 'Bearer ' + token } : {}),
     ...options.headers,
   };
-
-  const res = await fetch(`${BASE_URL}${endpoint}`, { ...options, headers });
-
+  const res = await fetch(BASE_URL + endpoint, { ...options, headers });
   if (!res.ok) {
-    const err = await res.json().catch(() => ({ message: 'Error en la solicitud' }));
-    throw new Error(err.message || `HTTP ${res.status}`);
+    const body = await res.json().catch(() => ({}));
+    const error = new Error(body.message || 'Error HTTP ' + res.status);
+    error.status = res.status;
+    if (res.status === 401 && token && !endpoint.startsWith('/auth/login')) window.dispatchEvent(new Event('hfp:unauthorized'));
+    throw error;
   }
-  return res.json();
+  return res.status === 204 ? null : res.json();
 };
-
-// --- Auth ---
+const write = (endpoint, method, data) => request(endpoint, { method, ...(data === undefined ? {} : { body: JSON.stringify(data) }) });
 export const authApi = {
-  register: (data) => request('/auth/register', { method: 'POST', body: JSON.stringify(data) }),
-  login: (data) => request('/auth/login', { method: 'POST', body: JSON.stringify(data) }),
+  register: data => write('/auth/register', 'POST', data),
+  login: data => write('/auth/login', 'POST', data),
   me: () => request('/auth/me'),
-  updateProfile: (data) => request('/auth/me', { method: 'PUT', body: JSON.stringify(data) }),
+  updateProfile: data => write('/auth/me', 'PUT', data),
 };
-
-// --- Service Requests ---
 export const requestsApi = {
-  create: (data) => request('/requests', { method: 'POST', body: JSON.stringify(data) }),
+  create: data => write('/requests', 'POST', data),
   myRequests: () => request('/requests/mine'),
-  available: (params = '') => request(`/requests/available${params}`),
-  getById: (id) => request(`/requests/${id}`),
-  accept: (id) => request(`/requests/${id}/accept`, { method: 'PUT' }),
-  updateStatus: (id, status) => request(`/requests/${id}/status`, { method: 'PUT', body: JSON.stringify({ status }) }),
-  cancel: (id) => request(`/requests/${id}/cancel`, { method: 'PUT' }),
+  all: () => request('/requests/all'),
+  available: (params = '') => request('/requests/available' + params),
+  getById: id => request('/requests/' + id),
+  accept: id => write('/requests/' + id + '/accept', 'PUT'),
+  updateStatus: (id, status) => write('/requests/' + id + '/status', 'PUT', { status }),
+  cancel: id => write('/requests/' + id + '/cancel', 'PUT'),
 };
-
-// --- Reviews ---
-export const reviewsApi = {
-  create: (data) => request('/reviews', { method: 'POST', body: JSON.stringify(data) }),
-  forTechnician: (id) => request(`/reviews/technician/${id}`),
-};
-
-// --- Categories ---
-export const categoriesApi = {
-  list: () => request('/services/categories'),
-};
-
-// --- Notifications ---
+export const reviewsApi = { create: data => write('/reviews', 'POST', data), forTechnician: id => request('/reviews/technician/' + id) };
+export const categoriesApi = { list: () => request('/services/categories') };
+export const providersApi = { list: () => request('/services/technicians') };
 export const notificationsApi = {
   list: () => request('/notifications'),
-  markRead: (id) => request(`/notifications/${id}/read`, { method: 'PUT' }),
+  markRead: id => write('/notifications/' + id + '/read', 'PUT'),
+  markAllRead: () => write('/notifications/read-all', 'PUT'),
   unreadCount: () => request('/notifications/unread-count'),
 };
-
-// --- Schedule ---
 export const scheduleApi = {
-  create: (data) => request('/schedule', { method: 'POST', body: JSON.stringify(data) }),
-  mine: () => request('/schedule/mine'),
-  update: (id, data) => request(`/schedule/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-  delete: (id) => request(`/schedule/${id}`, { method: 'DELETE' }),
+  create: data => write('/schedule', 'POST', data), mine: () => request('/schedule/mine'),
+  update: (id, data) => write('/schedule/' + id, 'PUT', data), delete: id => write('/schedule/' + id, 'DELETE'),
 };
-
-// --- Verification (KYC) ---
 export const verificationApi = {
   pending: () => request('/verification/pending'),
-  approve: (id) => request(`/verification/${id}/approve`, { method: 'PUT' }),
-  reject: (id, reason) => request(`/verification/${id}/reject`, { method: 'PUT', body: JSON.stringify({ reason }) }),
+  approve: id => write('/verification/' + id + '/approve', 'PUT'),
+  reject: (id, reason) => write('/verification/' + id + '/reject', 'PUT', { reason }),
+  upload: data => request('/verification/upload', { method: 'POST', body: data }),
+  download: async url => {
+    if (!/^\/uploads\/[\w.-]+$/.test(url)) throw new Error('Documento inválido');
+    const res = await fetch(BASE_URL.replace(/\/api$/, '') + url, { headers: { Authorization: 'Bearer ' + getToken() } });
+    if (!res.ok) throw new Error('No se pudo descargar el documento');
+    const blob = await res.blob();
+    const link = document.createElement('a');
+    const blobUrl = URL.createObjectURL(blob);
+    link.href = blobUrl; link.download = url.split('/').pop();
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+  },
 };
-
-// --- Admin ---
 export const adminApi = {
-  users: (params = '') => request(`/users${params}`),
-  getUser: (id) => request(`/users/${id}`),
-  toggleUser: (id) => request(`/users/${id}/toggle`, { method: 'PUT' }),
-  overview: () => request('/reports/overview'),
-  byCategory: () => request('/reports/by-category'),
-  byStatus: () => request('/reports/by-status'),
+  createUser: data => write('/users', 'POST', data), updateUser: (id, data) => write('/users/' + id, 'PUT', data),
+  users: (params = '') => request('/users' + params), getUser: id => request('/users/' + id),
+  toggleUser: id => write('/users/' + id + '/toggle', 'PUT'),
+  overview: () => request('/reports/overview'), byCategory: () => request('/reports/by-category'),
+  byStatus: () => request('/reports/by-status'), trend: () => request('/reports/trend'),
+  companies: () => request('/users/companies/pending'),
+  verifyCompany: (id, status) => write('/users/companies/' + id + '/verification', 'PUT', { status }),
 };
-
-// --- Companies ---
 export const companiesApi = {
-  mine: () => request('/companies/mine'),
-  employees: () => request('/companies/mine/employees'),
-  addEmployee: (data) => request('/companies/mine/employees', { method: 'POST', body: JSON.stringify(data) }),
-  removeEmployee: (id) => request(`/companies/mine/employees/${id}`, { method: 'DELETE' }),
-  assignJob: (data) => request('/companies/mine/assign', { method: 'POST', body: JSON.stringify(data) }),
+  mine: () => request('/companies/mine'), update: data => write('/companies/mine', 'PUT', data),
+  employees: () => request('/companies/mine/employees'), addEmployee: data => write('/companies/mine/employees', 'POST', data),
+  removeEmployee: id => write('/companies/mine/employees/' + id, 'DELETE'),
+  assignJob: data => write('/companies/mine/assign', 'POST', data), jobs: () => request('/companies/mine/jobs'),
+  updateStatus: (id, status) => write('/companies/mine/jobs/' + id + '/status', 'PUT', { status }),
 };

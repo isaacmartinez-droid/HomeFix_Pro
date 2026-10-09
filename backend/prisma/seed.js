@@ -1,133 +1,48 @@
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcrypt');
-
 const prisma = new PrismaClient();
-
 async function main() {
-  // Categories
-  const catElec = await prisma.serviceCategory.create({
-    data: { name: 'Electricidad', description: 'Reparaciones e instalaciones eléctricas.', icon: 'electrical_services' }
-  });
-  const catPlom = await prisma.serviceCategory.create({
-    data: { name: 'Plomería', description: 'Reparación de tuberías, grifos y filtraciones.', icon: 'plumbing' }
-  });
-  const catAc = await prisma.serviceCategory.create({
-    data: { name: 'Aire Acondicionado', description: 'Mantenimiento y reparación de A/C.', icon: 'ac_unit' }
-  });
-  const catMant = await prisma.serviceCategory.create({
-    data: { name: 'Mantenimiento General', description: 'Reparaciones varias y pintura.', icon: 'handyman' }
-  });
-
-  const passwordHash = await bcrypt.hash('123456', 10);
-
-  // Admin
-  const admin = await prisma.user.create({
-    data: {
-      email: 'admin@homefix.pro',
-      passwordHash,
-      fullName: 'Administrador del Sistema',
-      role: 'ADMIN',
+  const password = process.env.ADMIN_PASSWORD;
+  if (!password || password.length < 6 || Buffer.byteLength(password) > 72) throw new Error('Configura ADMIN_PASSWORD con entre 6 y 72 bytes');
+  const categories = [
+    ['Electricidad', 'Reparaciones e instalaciones eléctricas', 'electrical_services'],
+    ['Plomería', 'Reparación de tuberías, grifos y filtraciones', 'plumbing'],
+    ['Aire Acondicionado', 'Mantenimiento y reparación de A/C', 'ac_unit'],
+    ['Mantenimiento General', 'Reparaciones varias y pintura', 'handyman'],
+  ];
+  await prisma.$transaction(async tx => {
+    for (const [name, description, icon] of categories) {
+      if (!await tx.serviceCategory.findFirst({ where: { name } })) await tx.serviceCategory.create({ data: { name, description, icon } });
     }
   });
-
-  // Clients
-  const client1 = await prisma.user.create({
-    data: {
-      email: 'maria@ejemplo.com',
-      passwordHash,
-      fullName: 'María Pérez',
-      phone: '8888-1111',
-      role: 'CLIENTE',
-      address: 'Altamira'
-    }
+  const admin = await prisma.user.findUnique({ where: { email: 'admin@homefix.pro' } });
+  if (admin && admin.role !== 'ADMIN') throw new Error('El correo del administrador pertenece a otra cuenta');
+  // Running this command explicitly rotates the bootstrap administrator password.
+  await prisma.user.upsert({
+    where: { email: 'admin@homefix.pro' },
+    create: { email: 'admin@homefix.pro', fullName: 'Administrador del Sistema', role: 'ADMIN', passwordHash: await bcrypt.hash(password, 12) },
+    update: { passwordHash: await bcrypt.hash(password, 12) },
   });
-
-  const client2 = await prisma.user.create({
-    data: {
-      email: 'carlos@ejemplo.com',
-      passwordHash,
-      fullName: 'Carlos Mendoza',
-      phone: '8888-2222',
-      role: 'CLIENTE',
-      address: 'Los Robles'
-    }
-  });
-
-  // Technicians
-  const tech1 = await prisma.user.create({
-    data: {
-      email: 'juan@tech.com',
-      passwordHash,
-      fullName: 'Juan Pérez',
-      phone: '8888-3333',
-      role: 'TECNICO',
-      techProfile: {
-        create: {
-          specialty: 'PLOMERIA',
-          verificationStatus: 'VERIFICADO',
-          avgRating: 4.8,
-          totalJobs: 24,
-          totalEarnings: 850
-        }
-      }
-    }
-  });
-
-  const tech2 = await prisma.user.create({
-    data: {
-      email: 'ana@tech.com',
-      passwordHash,
-      fullName: 'Ana Rojas',
-      phone: '8888-4444',
-      role: 'TECNICO',
-      techProfile: {
-        create: {
-          specialty: 'ELECTRICIDAD',
-          verificationStatus: 'VERIFICADO',
-          avgRating: 4.9,
-          totalJobs: 15,
-          totalEarnings: 520
-        }
-      }
-    }
-  });
-
-  // Service requests
-  const req1 = await prisma.serviceRequest.create({
-    data: {
-      clientId: client1.id,
-      categoryId: catPlom.id,
-      title: 'Fuga de agua en lavabo',
-      description: 'El lavabo del baño principal tiene una fuga constante.',
-      address: 'Casa 45, Altamira',
-      neighborhood: 'Altamira',
-      urgency: 'ALTA',
-      status: 'SOLICITADO'
-    }
-  });
-
-  const req2 = await prisma.serviceRequest.create({
-    data: {
-      clientId: client2.id,
-      categoryId: catElec.id,
-      technicianId: tech2.id,
-      title: 'Instalar lámparas',
-      description: 'Necesito instalar 3 lámparas en la sala.',
-      address: 'Condominio Los Robles, Apt 12',
-      neighborhood: 'Los Robles',
-      urgency: 'BAJA',
-      status: 'ASIGNADO'
-    }
-  });
-
-  console.log('Seed completed successfully!');
+  const owners = await prisma.user.findMany({ where: { role: 'EMPRESA', companyOwned: null } });
+  for (const owner of owners) await prisma.company.create({ data: { ownerId: owner.id, name: owner.fullName, address: owner.address } });
+  // Local demo accounts requested for the client and technician interfaces.
+  const demoPasswordHash = await bcrypt.hash('123456', 12);
+  for (const account of [
+    { email: 'maria@ejemplo.com', fullName: 'María Pérez', role: 'CLIENTE' },
+    { email: 'juan@tech.com', fullName: 'Juan Pérez', role: 'TECNICO' },
+  ]) {
+    const existing = await prisma.user.findUnique({ where: { email: account.email } });
+    if (existing && existing.role !== account.role) throw new Error('El correo demo pertenece a otro rol: ' + account.email);
+    const tech = account.role === 'TECNICO';
+    await prisma.user.upsert({
+      where: { email: account.email },
+      create: { ...account, passwordHash: demoPasswordHash, isActive: true, ...(tech ? { techProfile: { create: { specialty: 'PLOMERIA' } } } : {}) },
+      update: { passwordHash: demoPasswordHash, isActive: true, ...(tech ? { techProfile: { upsert: { create: { specialty: 'PLOMERIA' }, update: {} } } } : {}) },
+    });
+  }
+  console.log('Categorías y administrador preparados. La contraseña está en ADMIN_PASSWORD.');
+  console.log('Cliente: maria@ejemplo.com; técnico: juan@tech.com. Contraseña demo: 123456.');
 }
-
-main()
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+main().catch(error => { console.error(error.message); process.exitCode = 1; }).finally(() => prisma.$disconnect());

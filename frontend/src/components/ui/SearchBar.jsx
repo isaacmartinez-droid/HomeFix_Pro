@@ -6,7 +6,7 @@ const SearchBar = ({ placeholder = 'Buscar...', onSearch, filters = [] }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSearch && onSearch({ query, filter: activeFilter });
+    onSearch?.({ query, filter: activeFilter });
   };
 
   return (

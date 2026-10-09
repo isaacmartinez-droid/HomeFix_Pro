@@ -4,7 +4,7 @@ import { requestsApi, categoriesApi } from '../../services/api';
 import Sidebar from '../../components/layout/Sidebar';
 import TopBar from '../../components/layout/TopBar';
 import Card from '../../components/ui/Card';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/auth';
 
 const NEIGHBORHOODS = ['Altamira','Los Robles','Bolonia','Las Colinas','Planes de Altamira','El Dorado','Bello Horizonte','Linda Vista','Villa Fontana','Reparto San Juan'];
 
@@ -15,6 +15,7 @@ export default function CreateRequestPage() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [error, setError] = useState('');
   const [form, setForm] = useState({
     categoryId: params.get('categoria') || '',
     title: '',
@@ -25,18 +26,19 @@ export default function CreateRequestPage() {
   });
 
   useEffect(() => {
-    categoriesApi.list().then(setCategories).catch(console.error);
+    categoriesApi.list().then(setCategories).catch(err => setError(err.message));
   }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError('');
     try {
       await requestsApi.create(form);
       setSuccess(true);
       setTimeout(() => navigate('/cliente/solicitudes'), 2000);
     } catch (err) {
-      alert(err.message);
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -46,7 +48,7 @@ export default function CreateRequestPage() {
     return (
       <div className="min-h-screen bg-background flex">
         <Sidebar role="CLIENTE" />
-        <div className="ml-64 flex-1 flex items-center justify-center">
+        <div className="md:ml-64 flex-1 flex items-center justify-center">
           <div className="text-center p-xl">
             <div className="w-20 h-20 bg-success-container rounded-full flex items-center justify-center mx-auto mb-lg">
               <span className="material-symbols-outlined text-5xl text-success" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
@@ -69,7 +71,7 @@ export default function CreateRequestPage() {
   return (
     <div className="min-h-screen bg-background flex">
       <Sidebar role="CLIENTE" />
-      <div className="ml-64 flex-1 flex flex-col">
+      <div className="md:ml-64 flex-1 flex flex-col">
         <TopBar userName={user?.fullName} />
         <main className="flex-1 p-lg max-w-[900px] w-full mx-auto">
           <div className="flex items-center gap-sm mb-lg">
@@ -82,6 +84,7 @@ export default function CreateRequestPage() {
             </div>
           </div>
 
+          {error && <p role="alert" className="text-red-700 mb-4">{error}</p>}
           <form onSubmit={handleSubmit} className="space-y-lg">
             {/* Category */}
             <Card className="p-lg">

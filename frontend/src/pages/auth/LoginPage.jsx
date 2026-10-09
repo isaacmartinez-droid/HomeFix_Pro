@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/auth';
 import { authApi } from '../../services/api';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
+import './LoginPage.css';
 
 export default function LoginPage() {
   const [form, setForm] = useState({ email: '', password: '' });
@@ -10,9 +11,11 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+  const reducedMotion = useReducedMotion();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (loading) return;
     setError('');
     setLoading(true);
     try {
@@ -33,35 +36,35 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center p-4 lg:p-8 font-sans">
+    <div className="homefix-login">
       <motion.div 
-        initial={{ opacity: 0, y: 20 }}
+        initial={reducedMotion ? false : { opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        className="w-full max-w-[1100px] bg-black rounded-[32px] overflow-hidden flex flex-col lg:flex-row shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-white/10 min-h-[650px] relative"
+        className="homefix-login__card"
       >
         
         {/* Left Panel - Premium Gradient Background */}
-        <div className="hidden lg:flex w-1/2 relative p-12 flex-col justify-center overflow-hidden">
+        <div className="homefix-login__intro" aria-hidden="true">
           {/* Animated Background Blobs */}
           <div className="absolute inset-0 bg-[#0a0a0a] z-0"></div>
           <motion.div 
-             animate={{ scale: [1, 1.2, 1], rotate: [0, 90, 0] }} 
+             animate={reducedMotion ? {} : { scale: [1, 1.2, 1], rotate: [0, 90, 0] }} 
              transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
              className="absolute -top-32 -left-32 w-[500px] h-[500px] bg-blue-700 rounded-full mix-blend-screen filter blur-[120px] opacity-40 z-0"
           />
           <motion.div 
-             animate={{ scale: [1, 1.3, 1], rotate: [0, -90, 0] }} 
+             animate={reducedMotion ? {} : { scale: [1, 1.3, 1], rotate: [0, -90, 0] }} 
              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
              className="absolute top-1/3 -right-32 w-[400px] h-[400px] bg-cyan-600 rounded-full mix-blend-screen filter blur-[100px] opacity-30 z-0"
           />
           <motion.div 
-             animate={{ scale: [1, 1.1, 1], y: [0, 50, 0] }} 
+             animate={reducedMotion ? {} : { scale: [1, 1.1, 1], y: [0, 50, 0] }} 
              transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
              className="absolute -bottom-32 left-1/4 w-[400px] h-[400px] bg-indigo-700 rounded-full mix-blend-screen filter blur-[120px] opacity-30 z-0"
           />
 
-          <div className="relative z-10 flex flex-col items-center justify-center h-full max-w-sm mx-auto text-center mt-10">
+          <div className="homefix-login__intro-content">
             <motion.div 
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -75,7 +78,7 @@ export default function LoginPage() {
             </motion.div>
 
             <motion.h2 
-              initial={{ opacity: 0, y: 20 }}
+              initial={reducedMotion ? false : { opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4, duration: 0.5 }}
               className="text-4xl font-bold text-white mb-8 leading-tight"
@@ -84,21 +87,21 @@ export default function LoginPage() {
             </motion.h2>
 
             <motion.div 
-              initial={{ opacity: 0, y: 20 }}
+              initial={reducedMotion ? false : { opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6, duration: 0.5 }}
               className="w-full space-y-4"
             >
               <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-4 flex items-center gap-4 border border-white/20 shadow-lg transform transition-transform">
-                <div className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center text-sm font-bold">1</div>
+                <div className="shrink-0 w-8 h-8 rounded-full bg-white text-black flex items-center justify-center text-sm font-bold">1</div>
                 <span className="text-white font-medium">Ingresa a tu cuenta</span>
               </div>
               <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-4 flex items-center gap-4 border border-white/5 opacity-60">
-                <div className="w-8 h-8 rounded-full bg-white/20 text-white flex items-center justify-center text-sm font-bold">2</div>
+                <div className="shrink-0 w-8 h-8 rounded-full bg-white/20 text-white flex items-center justify-center text-sm font-bold">2</div>
                 <span className="text-white font-medium">Explora servicios</span>
               </div>
               <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-4 flex items-center gap-4 border border-white/5 opacity-60">
-                <div className="w-8 h-8 rounded-full bg-white/20 text-white flex items-center justify-center text-sm font-bold">3</div>
+                <div className="shrink-0 w-8 h-8 rounded-full bg-white/20 text-white flex items-center justify-center text-sm font-bold">3</div>
                 <span className="text-white font-medium">Configura tu perfil</span>
               </div>
             </motion.div>
@@ -106,87 +109,87 @@ export default function LoginPage() {
         </div>
 
         {/* Right Panel - Form */}
-        <div className="w-full lg:w-1/2 p-8 sm:p-12 lg:p-16 flex flex-col justify-center bg-[#050505] relative z-10">
+        <div className="homefix-login__form-panel">
           
-          <div className="lg:hidden flex items-center justify-center gap-3 mb-10">
+          <div className="homefix-login__mobile-brand">
              <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center border border-white/10">
                <span className="material-symbols-outlined text-white text-xl">home_repair_service</span>
              </div>
-             <span className="text-xl font-bold text-white tracking-widest uppercase">HomeFix Pro</span>
+             <span className="homefix-login__mobile-brand-name">HomeFix Pro</span>
           </div>
 
-          <div className="max-w-md w-full mx-auto">
-            <div className="text-center lg:text-left mb-10">
-              <h1 className="text-3xl font-bold text-white mb-3">Iniciar Sesión</h1>
-              <p className="text-zinc-400 text-sm">Ingresa tus credenciales para acceder a la plataforma.</p>
+          <div className="homefix-login__form-content">
+            <div className="homefix-login__heading">
+              <h1 >Iniciar Sesión</h1>
+              <p >Ingresa tus credenciales para acceder a la plataforma.</p>
             </div>
 
             {error && (
               <motion.div 
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="mb-6 w-full px-4 py-3 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl text-sm flex items-center gap-2"
+                role="alert" id="login-error" className="homefix-login__error mb-6 w-full px-4 py-3 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl text-sm flex items-start gap-2"
               >
-                <span className="material-symbols-outlined text-sm">error</span>
-                {error}
+                <span className="material-symbols-outlined text-sm shrink-0" aria-hidden="true">error</span>
+                <span className="min-w-0">{error}</span>
               </motion.div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="homefix-login__form" aria-busy={loading}>
               <div>
-                <label className="block text-xs font-semibold text-zinc-400 mb-2 uppercase tracking-wider">Correo Electrónico</label>
+                <label htmlFor="login-email">Correo Electrónico</label>
                 <input
+                  id="login-email"
+                  name="email"
+                  autoComplete="username"
+                  inputMode="email"
+                  autoCapitalize="none"
+                  spellCheck={false}
+                  aria-describedby={error ? "login-error" : undefined}
                   type="email"
                   value={form.email}
                   onChange={e => setForm({ ...form, email: e.target.value })}
                   placeholder="ej. juan@gmail.com"
                   required
-                  className="w-full px-5 py-4 bg-[#111] text-white rounded-xl focus:outline-none focus:ring-1 focus:ring-white transition-all border border-zinc-800 placeholder-zinc-600"
+                  className="homefix-login__input"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-zinc-400 mb-2 uppercase tracking-wider">Contraseña</label>
+                <label htmlFor="login-password">Contraseña</label>
                 <input
+                  id="login-password"
+                  name="password"
+                  autoComplete="current-password"
+                  aria-describedby={error ? "login-error" : "login-help"}
                   type="password"
                   value={form.password}
                   onChange={e => setForm({ ...form, password: e.target.value })}
                   placeholder="Ingresa tu contraseña"
                   required
-                  className="w-full px-5 py-4 bg-[#111] text-white rounded-xl focus:outline-none focus:ring-1 focus:ring-white transition-all border border-zinc-800 placeholder-zinc-600"
+                  className="homefix-login__input"
                 />
               </div>
 
-              <div className="flex justify-between items-center text-xs mt-2">
-                 <span className="text-zinc-500">Mínimo 6 caracteres.</span>
-                 <a href="#" className="text-zinc-400 hover:text-white transition-colors">¿Olvidaste tu contraseña?</a>
-              </div>
+              <p id="login-help" className="homefix-login__help">¿Olvidaste tu contraseña? Contacta al administrador para recuperar el acceso.</p>
 
               <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                whileHover={reducedMotion ? {} : { scale: 1.01 }}
+                whileTap={reducedMotion ? {} : { scale: 0.98 }}
                 type="submit"
                 disabled={loading}
-                className="w-full bg-white text-black rounded-xl py-4 font-bold hover:bg-zinc-200 transition-colors disabled:opacity-70 flex items-center justify-center gap-2 mt-4"
+                className="homefix-login__submit"
               >
                 {loading && <span className="material-symbols-outlined animate-spin text-sm">progress_activity</span>}
-                Ingresar a la plataforma
+                {loading ? "Ingresando…" : "Ingresar a la plataforma"}
               </motion.button>
             </form>
 
-            <div className="mt-8 text-center text-sm text-zinc-500">
+            <div className="homefix-login__register">
               ¿No tienes cuenta? <Link to="/register" className="text-white font-bold hover:underline">Regístrate</Link>
             </div>
 
-            {/* Demo credentials */}
-            <div className="mt-8 pt-6 border-t border-zinc-800 text-center text-xs text-zinc-500">
-              <p className="mb-2">Credenciales Demo (Contraseña: 123456):</p>
-              <div className="flex flex-col gap-1 items-center">
-                <span className="font-mono bg-zinc-900 px-2 py-1 rounded">Admin: admin@homefix.pro</span>
-                <span className="font-mono bg-zinc-900 px-2 py-1 rounded">Técnico: juan@tech.com</span>
-                <span className="font-mono bg-zinc-900 px-2 py-1 rounded">Cliente: maria@ejemplo.com</span>
-              </div>
-            </div>
+
           </div>
         </div>
       </motion.div>

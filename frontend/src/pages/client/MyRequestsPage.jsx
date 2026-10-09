@@ -1,21 +1,23 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { requestsApi } from '../../services/api';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/auth';
 import Sidebar from '../../components/layout/Sidebar';
 import TopBar from '../../components/layout/TopBar';
 import Card from '../../components/ui/Card';
 import StatusChip from '../../components/ui/StatusChip';
 import Timeline from '../../components/ui/Timeline';
+import RequestActions from '../../components/RequestActions';
 
 export default function MyRequestsPage() {
   const { user } = useAuth();
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [filter, setFilter] = useState('ALL');
 
   useEffect(() => {
-    requestsApi.myRequests().then(setRequests).catch(console.error).finally(() => setLoading(false));
+    requestsApi.myRequests().then(setRequests).catch(err => setError(err.message)).finally(() => setLoading(false));
   }, []);
 
   const statusFilters = ['ALL', 'SOLICITADO', 'ASIGNADO', 'EN_PROGRESO', 'FINALIZADO', 'CANCELADO'];
@@ -24,7 +26,7 @@ export default function MyRequestsPage() {
   return (
     <div className="min-h-screen bg-background flex">
       <Sidebar role="CLIENTE" />
-      <div className="ml-64 flex-1 flex flex-col">
+      <div className="md:ml-64 flex-1 flex flex-col">
         <TopBar userName={user?.fullName} />
         <main className="flex-1 p-lg max-w-[1200px] w-full mx-auto">
           <div className="flex items-center justify-between mb-lg">
@@ -48,6 +50,7 @@ export default function MyRequestsPage() {
             ))}
           </div>
 
+          {error && <p role="alert" className="text-red-700 mb-4">{error}</p>}
           {loading ? (
             <div className="flex justify-center py-20">
               <span className="material-symbols-outlined text-5xl text-primary animate-spin">progress_activity</span>
@@ -96,6 +99,7 @@ export default function MyRequestsPage() {
                       </div>
                     </div>
                   )}
+                  <RequestActions request={req} onRefresh={() => requestsApi.myRequests().then(setRequests)} />
                 </Card>
               ))}
             </div>

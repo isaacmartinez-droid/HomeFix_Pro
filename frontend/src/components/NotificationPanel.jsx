@@ -1,6 +1,6 @@
 import React from 'react';
 
-const NotificationPanel = ({ notifications = [], onMarkRead, onClose }) => {
+const NotificationPanel = ({ notifications = [], onMarkRead, onMarkAllRead, onClose, loading = false, error = '' }) => {
   const typeStyles = {
     INFO: 'bg-info-container text-info',
     ALERTA: 'bg-warning-container text-warning',
@@ -28,7 +28,8 @@ const NotificationPanel = ({ notifications = [], onMarkRead, onClose }) => {
 
       {/* Notifications List */}
       <div className="max-h-96 overflow-y-auto divide-y divide-outline-variant">
-        {notifications.length === 0 ? (
+        {error && <p role="alert" className="p-4 text-red-700">{error}</p>}
+        {loading ? <p className="p-4">Cargando notificaciones…</p> : notifications.length === 0 ? (
           <div className="px-md py-lg text-center text-on-surface-variant font-body-sm text-body-sm">
             <span className="material-symbols-outlined text-4xl block mb-2">notifications_off</span>
             Sin notificaciones nuevas
@@ -68,7 +69,7 @@ const NotificationPanel = ({ notifications = [], onMarkRead, onClose }) => {
       {notifications.length > 0 && (
         <div className="px-md py-sm border-t border-outline-variant">
           <button
-            onClick={() => notifications.forEach(n => !n.isRead && onMarkRead && onMarkRead(n.id))}
+            onClick={onMarkAllRead}
             className="text-primary font-label-md text-label-md hover:underline cursor-pointer w-full text-center"
           >
             Marcar todas como leídas

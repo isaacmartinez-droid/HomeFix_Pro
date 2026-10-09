@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/auth';
 import { requestsApi } from '../../services/api';
 import Sidebar from '../../components/layout/Sidebar';
 import TopBar from '../../components/layout/TopBar';
@@ -10,26 +10,29 @@ import Timeline from '../../components/ui/Timeline';
 import ServiceCategoryGrid from '../../components/ServiceCategoryGrid';
 
 export default function ClientDashboard() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    requestsApi.myRequests().then(setRequests).catch(console.error).finally(() => setLoading(false));
+    requestsApi.myRequests().then(setRequests).catch(err => setError(err.message)).finally(() => setLoading(false));
   }, []);
 
   const activeRequest = requests.find(r => !['FINALIZADO', 'CANCELADO'].includes(r.status));
   const completedCount = requests.filter(r => r.status === 'FINALIZADO').length;
 
-  const handleLogout = () => { logout(); navigate('/login'); };
+
 
   return (
     <div className="min-h-screen bg-background flex">
       <Sidebar role="CLIENTE" />
-      <div className="ml-64 flex-1 flex flex-col">
+      <div className="md:ml-64 flex-1 flex flex-col">
         <TopBar userName={user?.fullName} />
         <main className="flex-1 p-lg space-y-lg max-w-[1200px] w-full mx-auto">
+          {loading && <p>Cargando solicitudes…</p>}
+          {error && <p role="alert" className="text-red-700">{error}</p>}
           {/* Greeting */}
           <div className="flex items-center justify-between">
             <div>

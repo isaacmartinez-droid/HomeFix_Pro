@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/auth';
 import { authApi } from '../../services/api';
 import { motion } from 'framer-motion';
 
@@ -182,7 +182,7 @@ export default function RegisterPage() {
                 <div>
                   <label className="block text-xs font-semibold text-zinc-400 mb-2 uppercase tracking-wider">Contraseña</label>
                   <input type="password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })}
-                    placeholder="Mínimo 6 caracteres" required minLength={6}
+                    placeholder="Mínimo 8 caracteres" required minLength={8}
                     className="w-full px-5 py-4 bg-[#111] text-white rounded-xl focus:outline-none focus:ring-1 focus:ring-white transition-all border border-zinc-800 placeholder-zinc-600" />
                 </div>
                 <div>

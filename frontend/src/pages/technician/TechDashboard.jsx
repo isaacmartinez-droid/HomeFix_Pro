@@ -1,20 +1,22 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { requestsApi } from '../../services/api';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/auth';
 import StatusChip from '../../components/ui/StatusChip';
-import StarRating from '../../components/ui/StarRating';
+
 
 export default function TechDashboard() {
   const { user } = useAuth();
-  const navigate = useNavigate();
+
   const [myJobs, setMyJobs] = useState([]);
   const [available, setAvailable] = useState([]);
   const [accepting, setAccepting] = useState(null);
+  const [error, setError] = useState('');
+  const [updating, setUpdating] = useState(null);
 
   useEffect(() => {
-    requestsApi.myRequests().then(setMyJobs).catch(console.error);
-    requestsApi.available().then(setAvailable).catch(console.error);
+    requestsApi.myRequests().then(setMyJobs).catch(err => setError(err.message));
+    requestsApi.available().then(setAvailable).catch(err => setError(err.message));
   }, []);
 
   const handleAccept = async (id) => {
@@ -25,7 +27,7 @@ export default function TechDashboard() {
       const updated = await requestsApi.myRequests();
       setMyJobs(updated);
     } catch (err) {
-      alert(err.message);
+      setError(err.message);
     } finally {
       setAccepting(null);
     }
@@ -50,13 +52,15 @@ export default function TechDashboard() {
         </div>
       </div>
 
+      {error && <p role="alert" className="text-red-700">{error}</p>}
+      {user.techProfile?.verificationStatus !== 'VERIFICADO' && <p className="bg-amber-50 p-4 rounded-lg">Antes de aceptar trabajos, <Link to="/dashboard/tecnico/verificacion" className="underline">envía tus documentos para verificación</Link>.</p>}
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
           { label: 'Trabajos Completados', value: completedJobs, icon: 'check_circle', color: 'text-emerald-600', bg: 'bg-emerald-100' },
           { label: 'Trabajos Activos', value: activeJobs, icon: 'build_circle', color: 'text-amber-600', bg: 'bg-amber-100' },
           { label: 'Calificación Promedio', value: techProfile?.avgRating?.toFixed(1) || '—', icon: 'star', color: 'text-purple-600', bg: 'bg-purple-100' },
-          { label: 'Disponibles en mi área', value: available.length, icon: 'radar', color: 'text-blue-600', bg: 'bg-blue-100' },
+          { label: 'Trabajos disponibles', value: available.length, icon: 'radar', color: 'text-blue-600', bg: 'bg-blue-100' },
         ].map(stat => (
           <div key={stat.label} className="bg-white rounded-2xl p-6 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] border border-slate-100 flex flex-col">
             <div className="flex items-start justify-between mb-4">
@@ -89,7 +93,7 @@ export default function TechDashboard() {
             {available.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-slate-400 py-8">
                 <span className="material-symbols-outlined text-4xl mb-2">search_off</span>
-                <p className="text-sm text-center">No hay trabajos disponibles en tu categoría.</p>
+                <p className="text-sm text-center">No hay trabajos disponibles.</p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -158,11 +162,12 @@ export default function TechDashboard() {
                         {job.neighborhood || job.address}
                       </p>
                       <button
+                        disabled={updating === job.id}
                         onClick={async () => {
                           const nextStatus = job.status === 'ASIGNADO' ? 'EN_PROGRESO' : 'FINALIZADO';
-                          await requestsApi.updateStatus(job.id, nextStatus);
-                          const updated = await requestsApi.myRequests();
-                          setMyJobs(updated);
+                          setUpdating(job.id); setError('');
+                          try { await requestsApi.updateStatus(job.id, nextStatus); setMyJobs(await requestsApi.myRequests()); }
+                          catch (err) { setError(err.message); } finally { setUpdating(null); }
                         }}
                         className="text-blue-600 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
                       >

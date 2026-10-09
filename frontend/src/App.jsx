@@ -17,7 +17,15 @@ const SearchProvidersPage = lazy(() => import('./pages/client/SearchProvidersPag
 const TechDashboard = lazy(() => import('./pages/technician/TechDashboard'));
 const AvailableJobsPage = lazy(() => import('./pages/technician/AvailableJobsPage'));
 const MyAssignedJobsPage = lazy(() => import('./pages/technician/MyAssignedJobsPage'));
+const TechSchedulePage = lazy(() => import('./pages/technician/TechSchedulePage'));
 const TechReviewsPage = lazy(() => import('./pages/technician/TechReviewsPage'));
+
+const VerificationPage = lazy(() => import('./pages/technician/VerificationPage'));
+const CompanyDashboard = lazy(() => import('./pages/company/CompanyDashboard'));
+const SettingsPage = lazy(() => import('./pages/shared/SettingsPage'));
+const SchedulePage = lazy(() => import('./pages/shared/SchedulePage'));
+const AdminVerificationPage = lazy(() => import('./pages/admin/AdminVerificationPage'));
+const AdminRequestsPage = lazy(() => import('./pages/admin/AdminRequestsPage'));
 
 // Layout
 const DashboardLayout = lazy(() => import('./components/layout/DashboardLayout'));
@@ -80,6 +88,8 @@ function App() {
               <Route path="disponibles" element={<AvailableJobsPage />} />
               <Route path="asignados" element={<MyAssignedJobsPage />} />
               <Route path="resenas" element={<TechReviewsPage />} />
+              <Route path="verificacion" element={<VerificationPage />} />
+              <Route path="agenda" element={<TechSchedulePage />} />
             </Route>
 
             {/* Admin Routes */}
@@ -90,8 +100,17 @@ function App() {
             }>
               <Route index element={<AdminDashboard />} />
               <Route path="usuarios" element={<AdminUsersPage />} />
+              <Route path="tecnicos" element={<AdminVerificationPage />} />
+              <Route path="solicitudes" element={<AdminRequestsPage />} />
             </Route>
 
+            <Route path="/dashboard/empresa" element={<ProtectedRoute allowedRoles={['EMPRESA']}><DashboardLayout /></ProtectedRoute>}>
+              <Route index element={<CompanyDashboard />} />
+              <Route path="despacho" element={<CompanyDashboard />} />
+              <Route path="empleados" element={<CompanyDashboard />} />
+            </Route>
+            <Route path="/ajustes" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+            <Route path="/agenda" element={<ProtectedRoute allowedRoles={['CLIENTE', 'TECNICO']}><SchedulePage /></ProtectedRoute>} />
             {/* Catch-all */}
             <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>

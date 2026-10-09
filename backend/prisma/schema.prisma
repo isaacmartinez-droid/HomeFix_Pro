@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = "file:./dev.db"
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -54,6 +54,7 @@ model Company {
   address            String?
   
   employees          CompanyEmployee[]
+  requests           ServiceRequest[]
 }
 
 model CompanyEmployee {
@@ -80,6 +81,8 @@ model ServiceRequest {
   client        User     @relation("ClientRequests", fields: [clientId], references: [id])
   categoryId    Int
   category      ServiceCategory @relation(fields: [categoryId], references: [id])
+  companyId     Int?
+  company       Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
   technicianId  Int?
   technician    User?    @relation("TechnicianRequests", fields: [technicianId], references: [id])
   
@@ -96,6 +99,10 @@ model ServiceRequest {
   
   appointment   Appointment?
   review        Review?
+
+  @@index([companyId, status])
+  @@index([clientId, status])
+  @@index([technicianId, status])
 }
 
 model Appointment {

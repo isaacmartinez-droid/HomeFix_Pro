@@ -7,9 +7,10 @@ export default function AvailableJobsPage() {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [accepting, setAccepting] = useState(null);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    requestsApi.available().then(setJobs).catch(console.error).finally(() => setLoading(false));
+    requestsApi.available().then(setJobs).catch(err => setError(err.message)).finally(() => setLoading(false));
   }, []);
 
   const handleAccept = async (id) => {
@@ -17,7 +18,7 @@ export default function AvailableJobsPage() {
     try {
       await requestsApi.accept(id);
       setJobs(prev => prev.filter(j => j.id !== id));
-    } catch (err) { alert(err.message); }
+    } catch (err) { setError(err.message); }
     finally { setAccepting(null); }
   };
 
@@ -34,6 +35,7 @@ export default function AvailableJobsPage() {
               {jobs.length > 0 && <span className="self-start sm:self-auto rounded-full bg-primary-container px-3 py-1 text-xs font-bold text-on-primary-container">{jobs.length} disponibles</span>}
             </div>
           </div>
+          {error && <p role="alert" className="text-red-700 mb-4">{error}</p>}
           {loading ? <div className="flex justify-center py-20"><span className="material-symbols-outlined text-5xl text-primary animate-spin">progress_activity</span></div>
           : jobs.length === 0 ? (
             <Card className="w-full max-w-6xl mx-auto border-dashed border-outline-variant bg-surface-container-low p-6 sm:p-10 text-center">
@@ -41,7 +43,7 @@ export default function AvailableJobsPage() {
                 <span className="material-symbols-outlined text-4xl">search_off</span>
               </div>
               <h3 className="mt-5 text-lg font-bold text-on-surface">No hay trabajos disponibles</h3>
-              <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-on-surface-variant">Cuando aparezca una solicitud dentro de tu especialidad, la verás aquí para poder aceptarla.</p>
+              <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-on-surface-variant">Cuando aparezca una solicitud disponible, la verás aquí para poder aceptarla.</p>
             </Card>
           ) : (
             <div className="w-full max-w-6xl mx-auto space-y-4">
