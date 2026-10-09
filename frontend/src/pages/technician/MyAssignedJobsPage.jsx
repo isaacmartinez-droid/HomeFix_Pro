@@ -1,13 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { requestsApi } from '../../services/api';
-import { useAuth } from '../../context/AuthContext';
-import Sidebar from '../../components/layout/Sidebar';
-import TopBar from '../../components/layout/TopBar';
 import Card from '../../components/ui/Card';
 import StatusChip from '../../components/ui/StatusChip';
 
 export default function MyAssignedJobsPage() {
-  const { user } = useAuth();
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -23,11 +19,7 @@ export default function MyAssignedJobsPage() {
   const completed = jobs.filter(j => j.status === 'FINALIZADO');
 
   return (
-    <div className="min-h-screen bg-background flex">
-      <Sidebar role="TECNICO" />
-      <div className="ml-64 flex-1 flex flex-col">
-        <TopBar userName={user?.fullName} />
-        <main className="flex-1 p-lg max-w-[1200px] mx-auto w-full space-y-lg">
+    <main className="w-full max-w-[1400px] mx-auto p-4 sm:p-lg space-y-lg">
           <h2 className="font-headline-lg text-headline-lg text-on-background">Mis Trabajos Asignados</h2>
 
           <div>
@@ -72,8 +64,6 @@ export default function MyAssignedJobsPage() {
               ))}
             </div>
           </div>
-        </main>
-      </div>
-    </div>
+    </main>
   );
 }
