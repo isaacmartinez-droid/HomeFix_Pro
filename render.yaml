@@ -1,0 +1,27 @@
+# Render Blueprint para el plan gratuito. PostgreSQL y archivos se guardan en Supabase.
+services:
+  - type: web
+    name: homefix-pro-api
+    runtime: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm ci && npx prisma generate
+    startCommand: npm run start:production
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_KYC_BUCKET
+        value: kyc-documents

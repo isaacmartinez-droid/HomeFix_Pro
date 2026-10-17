@@ -3,6 +3,7 @@ const prisma = require('../prisma');
 const auth = require('../middleware/auth');
 const roleGuard = require('../middleware/roleGuard');
 const upload = require('../middleware/upload');
+const { client: supabase, bucket } = require('../supabase');
 const { id, fail, optionalText } = require('../lib/policy');
 const router = express.Router();
 const include = { user: { select: { id: true, fullName: true, email: true, phone: true, isActive: true } } };
@@ -12,7 +13,17 @@ router.post('/upload', auth, roleGuard('TECNICO'), upload.fields([{ name: 'cedul
     const profile = await prisma.techProfile.findUnique({ where: { userId: req.user.id } });
     if (!profile) fail(404, 'Perfil no encontrado');
     if (!req.files?.cedula?.[0] || !req.files?.policeRecord?.[0]) fail(400, 'Debes enviar cédula y antecedentes');
+    if (supabase) for (const file of files) {
+      const extension = file.mimetype === 'application/pdf' ? '.pdf' : file.mimetype === 'image/png' ? '.png' : '.jpg';
+      file.filename = req.user.id + '-' + file.fieldname + '-' + require('crypto').randomUUID() + extension;
+    }
     await upload.validateFiles(files);
+    if (supabase) {
+      for (const file of files) {
+        const { error } = await supabase.storage.from(bucket).upload(file.filename, file.buffer, { contentType: file.mimetype, upsert: false });
+        if (error) fail(502, 'No se pudo guardar el documento de verificación');
+      }
+    }
     await prisma.techProfile.update({ where: { userId: req.user.id }, data: {
       cedulaDocUrl: '/uploads/' + req.files.cedula[0].filename,
       policeRecordUrl: '/uploads/' + req.files.policeRecord[0].filename,

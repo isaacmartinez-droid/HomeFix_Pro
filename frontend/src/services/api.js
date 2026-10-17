@@ -36,7 +36,7 @@ export const requestsApi = {
 };
 export const reviewsApi = { create: data => write('/reviews', 'POST', data), forTechnician: id => request('/reviews/technician/' + id) };
 export const categoriesApi = { list: () => request('/services/categories') };
-export const providersApi = { list: () => request('/services/technicians') };
+export const providersApi = { list: (params = '') => request('/services/technicians' + params) };
 export const notificationsApi = {
   list: () => request('/notifications'),
   markRead: id => write('/notifications/' + id + '/read', 'PUT'),

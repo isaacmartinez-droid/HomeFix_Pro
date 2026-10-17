@@ -8,7 +8,9 @@ const swaggerUi = require('swagger-ui-express');
 const prisma = require('./prisma');
 const auth = require('./middleware/auth');
 const { fail } = require('./lib/policy');
+const { client: supabase, bucket } = require('./supabase');
 const app = express();
+if (process.env.NODE_ENV === 'production') app.set('trust proxy', 1);
 app.use(cors({ origin: (process.env.CORS_ORIGIN || 'http://localhost:5173').split(',').map(value => value.trim()), credentials: true }));
 app.use(helmet());
 app.use(express.json({ limit: '100kb' }));
@@ -26,6 +28,12 @@ app.get('/uploads/:filename', auth, async (req, res, next) => {
   if (req.user.role !== 'ADMIN' && profile.userId !== req.user.id) fail(403, 'No autorizado');
   res.set('Cache-Control', 'private, no-store');
   res.set('Content-Disposition', 'attachment; filename="' + filename + '"');
+  if (supabase) {
+    const { data, error } = await supabase.storage.from(bucket).download(filename);
+    if (error || !data) fail(404, 'Documento no encontrado');
+    const buffer = Buffer.from(await data.arrayBuffer());
+    return res.type(filename.endsWith('.pdf') ? 'application/pdf' : filename.endsWith('.png') ? 'image/png' : 'image/jpeg').send(buffer);
+  }
   res.sendFile(filename, { root: process.env.UPLOAD_DIR || path.join(__dirname, '../uploads') }, error => { if (error) next(error); });
 });
 for (const name of ['auth', 'services', 'requests', 'reviews', 'notifications', 'users', 'verification', 'schedule', 'reports', 'companies']) app.use('/api/' + name, require('./routes/' + name + '.routes'));
